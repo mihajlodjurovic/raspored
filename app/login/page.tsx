@@ -11,11 +11,6 @@ export default async function LoginPage() {
   return (
     <div className="auth-wrap">
       <LoginForm />
-      <p className="hint">
-        Admin: username&nbsp;<code>VUKAS</code>
-        <br />
-        Employee: username&nbsp;<code>employee</code>
-      </p>
     </div>
   );
 }

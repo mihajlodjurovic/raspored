@@ -108,18 +108,6 @@ a {
   max-width: 380px;
   margin: 40px auto 0;
 }
-.hint {
-  margin-top: 16px;
-  color: var(--muted);
-  font-size: 0.85rem;
-  text-align: center;
-}
-.hint code {
-  background: var(--border);
-  padding: 1px 6px;
-  border-radius: 5px;
-  font-size: inherit;
-}
 
 /* -------------------------------- Card --------------------------------- */
 .card {
