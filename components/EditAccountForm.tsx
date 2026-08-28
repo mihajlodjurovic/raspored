@@ -4,6 +4,27 @@ import { useState, useActionState } from "react";
 import { updateAccount } from "@/lib/actions";
 import type { ActionResult } from "@/lib/actions";
 
+function PasswordInput({ name }: { name: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="password-wrap">
+      <input
+        type={show ? "text" : "password"}
+        name={name}
+        autoComplete="new-password"
+      />
+      <button
+        type="button"
+        className="password-toggle"
+        onClick={() => setShow((v) => !v)}
+        aria-label={show ? "Hide password" : "Show password"}
+      >
+        {show ? "Hide" : "Show"}
+      </button>
+    </div>
+  );
+}
+
 type EditProps = {
   accountId: string;
   username: string;
@@ -39,7 +60,7 @@ export default function EditAccountForm({ accountId, username, role, name, surna
       </label>
       <label className="field">
         <span>Password (leave blank to keep current)</span>
-        <input type="text" name="password" />
+        <PasswordInput name="password" />
       </label>
       <div className="field-row">
         <label className="field">

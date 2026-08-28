@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createAccount } from "@/lib/actions";
 import type { ActionResult } from "@/lib/actions";
 
@@ -12,6 +12,7 @@ export default function CreateAccountForm() {
 
   const [state, formAction, pending] = useActionState(action, undefined);
   const formRef = useRef<HTMLFormElement>(null);
+  const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
     if (state?.ok) formRef.current?.reset();
@@ -28,7 +29,23 @@ export default function CreateAccountForm() {
         </label>
         <label className="field">
           <span>Password</span>
-          <input type="text" name="password" minLength={6} required />
+          <div className="password-wrap">
+            <input
+              type={showPw ? "text" : "password"}
+              name="password"
+              minLength={6}
+              autoComplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPw((v) => !v)}
+              aria-label={showPw ? "Hide password" : "Show password"}
+            >
+              {showPw ? "Hide" : "Show"}
+            </button>
+          </div>
         </label>
       </div>
 
