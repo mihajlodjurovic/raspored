@@ -355,3 +355,116 @@ a {
   border-radius: 10px;
   font-size: 0.88rem;
 }
+
+/* ----------------------------- Accounts table --------------------------- */
+.accounts-card {
+  margin-top: 20px;
+  padding: 0;
+  overflow-x: auto;
+}
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.users-table th {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.users-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+.cell-username strong {
+  margin-right: 6px;
+}
+.badge-self {
+  background: #eef2ff;
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.cell-actions {
+  min-width: 170px;
+}
+.cell-actions form {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: top;
+}
+
+/* ------------------------------ Red points ------------------------------ */
+.red-points {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--border);
+  color: var(--muted);
+}
+.red-points.has-points {
+  background: #fee2e2;
+  color: var(--danger);
+}
+.warnings-list {
+  list-style: none;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.warnings-list li > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.warnings-list-plain li {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.warnings-card {
+  margin-bottom: 20px;
+  border-color: #fecaca;
+}
+.warnings-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+}
+
+/* Compact account forms (create + edit) */
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.account-form.card.form {
+  max-width: 560px;
+}

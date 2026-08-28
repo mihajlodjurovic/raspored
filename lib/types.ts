@@ -18,12 +18,27 @@ export type Shift = {
   applicants: Applicant[];
 };
 
-export type Db = {
-  shifts: Shift[];
-};
-
 export type SessionPayload = {
   username: string;
   role: Role;
   expiresAt: string;
+};
+
+export type User = {
+  id: string;
+  username: string;
+  role: Role;
+  name: string;
+  surname: string;
+  phone: string;
+  createdAt: string;
+  redPoints: number; // number of active warnings
+};
+
+export type Warning = {
+  id: string;
+  username: string;
+  shiftId: string;
+  shiftDate: string;
+  createdAt: string;
 };

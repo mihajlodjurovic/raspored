@@ -1,12 +1,15 @@
 import { requireRole } from "@/lib/session";
 import { getShifts } from "@/lib/store";
-import ShiftCard from "@/components/ShiftCard";
+import { getWarnings } from "@/lib/users";
+import ShiftCard, { formatDate } from "@/components/ShiftCard";
 
 export const dynamic = "force-dynamic";
 
 export default async function EmployeePage() {
   const session = await requireRole(["employee"]);
   const shifts = await getShifts();
+  const warnings = await getWarnings();
+  const myWarnings = warnings.filter((w) => w.username === session.username);
 
   const sorted = [...shifts].sort((a, b) =>
     `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)
@@ -18,6 +21,26 @@ export default async function EmployeePage() {
         <h1>Available shifts</h1>
         <p className="muted">Find a shift that suits you and apply.</p>
       </div>
+
+      {myWarnings.length > 0 && (
+        <div className="card warnings-card">
+          <h2>
+            My red points{" "}
+            <span className={`red-points has-points`}>{myWarnings.length}</span>
+          </h2>
+          <p className="muted">
+            You received these for cancelling shifts within 48 hours of the
+            start time.
+          </p>
+          <ul className="warnings-list warnings-list-plain">
+            {myWarnings.map((w) => (
+              <li key={w.id}>
+                Shift on {formatDate(w.shiftDate)} · cancelled within 48h
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {sorted.length === 0 ? (
         <div className="card">

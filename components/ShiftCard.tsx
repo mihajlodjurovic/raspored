@@ -30,10 +30,15 @@ function fullName(a: { name: string; surname: string }): string {
   return `${a.name} ${a.surname}`;
 }
 
+const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
+
 export default function ShiftCard(props: Props) {
   const { shift } = props;
   const spotsLeft = Math.max(0, shift.needed - shift.applicants.length);
   const isFull = shift.applicants.length >= shift.needed;
+  const shiftStartMs = new Date(`${shift.date}T${shift.startTime}`).getTime();
+  const within48h =
+    Number.isFinite(shiftStartMs) && shiftStartMs - Date.now() < FORTY_EIGHT_HOURS_MS;
 
   return (
     <article className={`card shift-card ${isFull ? "is-full" : ""}`}>
@@ -79,6 +84,7 @@ export default function ShiftCard(props: Props) {
             <WithdrawButton
               shiftId={shift.id}
               applicantId={props.myApplication.id}
+              within48h={within48h}
             />
           ) : isFull ? (
             <span className="muted">This shift is full.</span>
