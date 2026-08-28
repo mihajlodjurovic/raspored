@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   createUser,
@@ -16,6 +17,14 @@ import {
 } from "./users";
 import { createSession, deleteSession, requireRole } from "./session";
 import { addShift, deleteShift, getShift, updateShift } from "./store";
+import {
+  clearIpFailures,
+  clearLoginFailures,
+  ipBlocked,
+  getLockoutMs,
+  recordIpFailure,
+  recordLoginFailure,
+} from "./ratelimit";
 import type { Applicant, Role } from "./types";
 
 export type ActionResult = { ok: boolean; error?: string; message?: string };
@@ -32,10 +41,38 @@ export async function login(formData: FormData): Promise<ActionResult> {
     return { ok: false, error: "Please enter your username and password." };
   }
 
+  // Brute-force protection.
+  const h = await headers();
+  const forwarded = h.get("x-forwarded-for") ?? "";
+  const ip = forwarded.split(",")[0].trim() || "unknown";
+
+  if (ipBlocked(ip)) {
+    return {
+      ok: false,
+      error: "Too many attempts from this address. Try again in 15 minutes.",
+    };
+  }
+
+  const lockoutMs = await getLockoutMs(username);
+  if (lockoutMs > 0) {
+    return {
+      ok: false,
+      error: `Too many failed attempts. Try again in ${Math.ceil(
+        lockoutMs / 60000
+      )} minute(s).`,
+    };
+  }
+
   const account = await verifyCredentials(username, password);
   if (!account) {
+    await recordLoginFailure(username);
+    recordIpFailure(ip);
     return { ok: false, error: "Invalid username or password." };
   }
+
+  // Success: reset any counters.
+  await clearLoginFailures(username);
+  clearIpFailures(ip);
 
   await createSession({ username: account.username, role: account.role });
   revalidatePath("/", "layout");
