@@ -231,20 +231,38 @@ a {
 
 .add-worker-form {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
-.add-worker-form select {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 10px;
+.add-worker-field {
+  gap: 4px;
+}
+.add-worker-field > span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.add-worker-field select {
+  width: 100%;
+  padding: 9px 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   background: var(--surface);
   color: var(--text);
+  cursor: pointer;
+}
+.add-worker-field select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.add-worker-btn {
+  width: 100%;
 }
 
 .muted {

@@ -23,14 +23,21 @@ export default function AddWorkerForm({
 
   return (
     <form action={formAction} className="add-worker-form">
-      <select name="username" defaultValue={employees[0]?.username} required>
-        {employees.map((e) => (
-          <option key={e.username} value={e.username}>
-            {e.label}
-          </option>
-        ))}
-      </select>
-      <button type="submit" className="btn btn-primary btn-sm" disabled={pending}>
+      <label className="field add-worker-field">
+        <span>Add worker</span>
+        <select name="username" defaultValue={employees[0]?.username} required>
+          {employees.map((e) => (
+            <option key={e.username} value={e.username}>
+              {e.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button
+        type="submit"
+        className="btn btn-primary add-worker-btn"
+        disabled={pending}
+      >
         {pending ? "Adding…" : "Add worker"}
       </button>
       {state?.error && <p className="error">{state.error}</p>}
