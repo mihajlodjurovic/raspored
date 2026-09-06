@@ -4,7 +4,13 @@ import { useActionState } from "react";
 import { applyToShift } from "@/lib/actions";
 import type { ActionResult } from "@/lib/actions";
 
-export default function ApplyForm({ shiftId }: { shiftId: string }) {
+export default function ApplyForm({
+  shiftId,
+  noun = "shift",
+}: {
+  shiftId: string;
+  noun?: string;
+}) {
   const applyAction = async (_prev: ActionResult | undefined) =>
     applyToShift(shiftId);
 
@@ -14,7 +20,7 @@ export default function ApplyForm({ shiftId }: { shiftId: string }) {
     <form
       action={formAction}
       onSubmit={(e) => {
-        if (!confirm("Apply for this shift?")) e.preventDefault();
+        if (!confirm(`Apply for this ${noun}?`)) e.preventDefault();
       }}
     >
       <button type="submit" className="btn btn-primary" disabled={pending}>

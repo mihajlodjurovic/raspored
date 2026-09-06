@@ -39,21 +39,25 @@ export default function ShiftCard(props: Props) {
   const isFull = shift.applicants.length >= shift.needed;
 
   return (
-    <article className={`card shift-card ${isFull && !isFreeDay ? "is-full" : ""} ${isFreeDay ? "is-free-day" : ""} ${archived ? "is-archived" : ""}`}>
+    <article className={`card shift-card ${isFull ? "is-full" : ""} ${isFreeDay ? "is-free-day" : ""} ${archived ? "is-archived" : ""}`}>
       <div className="shift-head">
         <div>
           <h3 className="shift-date">{formatDate(shift.date)}</h3>
-          <p className="shift-time">
-            {shift.startTime} – {shift.endTime}
-          </p>
+          {!isFreeDay && (
+            <p className="shift-time">
+              {shift.startTime} – {shift.endTime}
+            </p>
+          )}
         </div>
-        <span className={`badge ${isFreeDay ? "badge-free" : archived ? "badge-archived" : isFull ? "badge-full" : "badge-open"}`}>
-          {isFreeDay ? "Free day" : archived ? "Archived" : isFull ? "Full" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
+        <span className={`badge ${archived ? "badge-archived" : isFull ? "badge-full" : isFreeDay ? "badge-free" : "badge-open"}`}>
+          {archived ? "Archived" : isFull ? "Full" : isFreeDay ? "Free day" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
         </span>
       </div>
 
       {isFreeDay ? (
-        <p className="shift-needed">No work scheduled during this time.</p>
+        <p className="shift-needed">
+          No work scheduled this day. {shift.applicants.length} of {shift.needed} worker{shift.needed === 1 ? "" : "s"} can take it off.
+        </p>
       ) : (
         <p className="shift-needed">
           Needed: <strong>{shift.needed}</strong> worker{shift.needed === 1 ? "" : "s"}
@@ -63,7 +67,7 @@ export default function ShiftCard(props: Props) {
       {props.view === "admin" ? (
         <>
           {shift.applicants.length === 0 ? (
-            <p className="muted">{isFreeDay ? "No applications for a free day." : "No applicants yet."}</p>
+            <p className="muted">{isFreeDay ? "No one has taken this free day yet." : "No applicants yet."}</p>
           ) : (
             <ul className="applicants">
               {shift.applicants.map((a) => (
@@ -82,17 +86,18 @@ export default function ShiftCard(props: Props) {
         </>
       ) : (
         <div className="card-actions">
-          {archived || isFreeDay ? (
-            <span className="muted">{archived ? "Applications are closed." : "This day is reserved as a free day."}</span>
+          {archived ? (
+            <span className="muted">Applications are closed.</span>
           ) : props.myApplication ? (
             <WithdrawButton
               shiftId={shift.id}
               applicantId={props.myApplication.id}
+              noun={isFreeDay ? "free day" : "shift"}
             />
           ) : isFull ? (
-            <span className="muted">This shift is full.</span>
+            <span className="muted">This {isFreeDay ? "free day" : "shift"} is full.</span>
           ) : (
-            <ApplyForm shiftId={shift.id} />
+            <ApplyForm shiftId={shift.id} noun={isFreeDay ? "free day" : "shift"} />
           )}
         </div>
       )}

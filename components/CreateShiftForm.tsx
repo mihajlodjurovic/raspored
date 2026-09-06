@@ -41,28 +41,30 @@ export default function CreateShiftForm() {
         <input type="date" name="date" min={today} required />
       </label>
 
-      <div className="field-row">
-        <label className="field">
-          <span>Start time</span>
-          <select name="startTime" defaultValue="08:00" required>
-            {TIME_SLOTS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>End time</span>
-          <select name="endTime" defaultValue="16:00" required>
-            {TIME_SLOTS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      {!isFreeDay && (
+        <div className="field-row">
+          <label className="field">
+            <span>Start time</span>
+            <select name="startTime" defaultValue="08:00" required>
+              {TIME_SLOTS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>End time</span>
+            <select name="endTime" defaultValue="16:00" required>
+              {TIME_SLOTS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
 
       <label className="checkbox-field">
         <input
@@ -72,15 +74,17 @@ export default function CreateShiftForm() {
           checked={isFreeDay}
           onChange={(event) => setIsFreeDay(event.target.checked)}
         />
-        <span>This is a free day (no workers needed)</span>
+        <span>This is a free day (workers can apply to take it off)</span>
       </label>
 
-      {!isFreeDay && (
-        <label className="field">
-          <span>Number of workers needed</span>
-          <input type="number" name="needed" min={1} defaultValue={1} required />
-        </label>
-      )}
+      <label className="field">
+        <span>
+          {isFreeDay
+            ? "Number of workers who can apply"
+            : "Number of workers needed"}
+        </span>
+        <input type="number" name="needed" min={1} defaultValue={1} required />
+      </label>
 
       <button type="submit" className="btn btn-primary" disabled={pending}>
         {pending ? "Creating…" : isFreeDay ? "Create free day" : "Create shift"}

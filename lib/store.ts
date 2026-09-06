@@ -82,6 +82,10 @@ function ensureSchema(): Promise<void> {
           )
         `;
         await db() `ALTER TABLE archived_shifts ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'shift'`;
+        // Free days created before applications were allowed had needed = 0,
+        // which would make them instantly "full". Give them one open spot.
+        await db() `UPDATE shifts SET needed = 1 WHERE type = 'freeDay' AND needed < 1`;
+        await db() `UPDATE archived_shifts SET needed = 1 WHERE type = 'freeDay' AND needed < 1`;
       });
   }
   return schemaReady;

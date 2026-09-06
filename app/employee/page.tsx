@@ -20,7 +20,7 @@ export default async function EmployeePage() {
     <div className="page">
       <div className="page-head">
         <h1>Available shifts</h1>
-        <p className="muted">Find a shift that suits you and apply. Free days are marked clearly and cannot be applied for.</p>
+        <p className="muted">Find a shift that suits you and apply, or take a free day off.</p>
       </div>
 
       {myWarnings.length > 0 && (

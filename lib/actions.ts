@@ -91,19 +91,29 @@ export async function createShift(formData: FormData): Promise<ActionResult> {
   await requireRole(["admin"]);
 
   const date = String(formData.get("date") ?? "");
-  const startTime = String(formData.get("startTime") ?? "");
-  const endTime = String(formData.get("endTime") ?? "");
   const type = formData.get("type") === "freeDay" ? "freeDay" : "shift";
   const needed = Number(formData.get("needed") ?? NaN);
+
+  // Free days last the whole day, so they have no start/end time.
+  const startTime = type === "freeDay" ? "" : String(formData.get("startTime") ?? "");
+  const endTime = type === "freeDay" ? "" : String(formData.get("endTime") ?? "");
 
   if (!date) return { ok: false, error: "Please pick a date." };
   if (date < new Date().toISOString().slice(0, 10)) {
     return { ok: false, error: "Please choose today or a future date." };
   }
-  if (!startTime || !endTime) return { ok: false, error: "Please pick the start and end times." };
-  if (startTime >= endTime) return { ok: false, error: "End time must be after the start time." };
-  if (type === "shift" && (!Number.isFinite(needed) || needed < 1)) {
-    return { ok: false, error: "Number of workers must be at least 1." };
+  if (type === "shift") {
+    if (!startTime || !endTime) return { ok: false, error: "Please pick the start and end times." };
+    if (startTime >= endTime) return { ok: false, error: "End time must be after the start time." };
+  }
+  if (!Number.isFinite(needed) || needed < 1) {
+    return {
+      ok: false,
+      error:
+        type === "freeDay"
+          ? "Number of workers who can take the free day must be at least 1."
+          : "Number of workers must be at least 1.",
+    };
   }
 
   await addShift({
@@ -112,7 +122,7 @@ export async function createShift(formData: FormData): Promise<ActionResult> {
     date,
     startTime,
     endTime,
-    needed: type === "freeDay" ? 0 : Math.floor(needed),
+    needed: Math.floor(needed),
     applicants: [],
   });
 
@@ -141,11 +151,8 @@ export async function applyToShift(shiftId: string): Promise<ActionResult> {
 
   const shift = await getShift(shiftId);
   if (!shift) return { ok: false, error: "This shift no longer exists." };
-  if (shift.type === "freeDay") {
-    return { ok: false, error: "Free days cannot be applied for." };
-  }
   if (shift.date < new Date().toISOString().slice(0, 10)) {
-    return { ok: false, error: "Applications are closed for past shifts." };
+    return { ok: false, error: "Applications are closed for past entries." };
   }
   if (shift.applicants.length >= shift.needed) {
     return { ok: false, error: "Sorry, this shift is already full." };
@@ -178,9 +185,6 @@ export async function withdrawApplication(
 
   const shift = await getShift(shiftId);
   if (!shift) return { ok: false, error: "This shift no longer exists." };
-  if (shift.type === "freeDay") {
-    return { ok: false, error: "Free days do not have applications." };
-  }
 
   const applicant = shift.applicants.find(
     (a) => a.id === applicantId && a.username === session.username

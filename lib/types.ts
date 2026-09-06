@@ -17,7 +17,7 @@ export type Shift = {
   date: string; // YYYY-MM-DD
   startTime: string; // HH:MM
   endTime: string; // HH:MM
-  needed: number; // how many workers are needed; 0 for free days
+  needed: number; // how many workers can apply (workers needed for a shift, workers allowed to take a free day)
   applicants: Applicant[];
 };
 

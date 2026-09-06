@@ -7,9 +7,11 @@ import type { ActionResult } from "@/lib/actions";
 export default function WithdrawButton({
   shiftId,
   applicantId,
+  noun = "shift",
 }: {
   shiftId: string;
   applicantId: string;
+  noun?: string;
 }) {
   const action = async (_prev: ActionResult | undefined) =>
     withdrawApplication(shiftId, applicantId);
@@ -20,7 +22,7 @@ export default function WithdrawButton({
     <form
       action={formAction}
       onSubmit={(e) => {
-        if (!confirm("Withdraw your application for this shift?")) {
+        if (!confirm(`Withdraw your application for this ${noun}?`)) {
           e.preventDefault();
         }
       }}
