@@ -180,15 +180,16 @@ a {
   color: var(--danger);
 }
 .badge-free {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: #dcfce7;
+  color: #15803d;
 }
 .badge-archived {
   background: #f1f5f9;
   color: #475569;
 }
 .is-free-day {
-  border-color: #bae6fd;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
 }
 .is-archived {
   opacity: 0.8;
@@ -368,6 +369,89 @@ a {
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 0.88rem;
+}
+
+/* -------------------------- Page layout + sidebar ----------------------- */
+.page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .page-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .week-schedule {
+    position: sticky;
+    top: 84px;
+  }
+}
+
+.week-days {
+  display: flex;
+  flex-direction: column;
+}
+.week-day {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.week-day:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.week-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.week-day-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.week-day.is-today .week-day-label {
+  color: var(--primary);
+}
+.badge-today {
+  background: #dbeafe;
+  color: var(--primary);
+}
+.week-empty {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+.week-entries {
+  list-style: none;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.week-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--bg);
+  border-left: 3px solid var(--primary);
+}
+.week-entry-free {
+  background: #f0fdf4;
+  border-left-color: #16a34a;
+}
+.week-entry-title {
+  font-weight: 600;
+}
+.week-entry-who {
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 /* ----------------------------- Accounts table --------------------------- */

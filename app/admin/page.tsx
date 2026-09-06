@@ -3,6 +3,7 @@ import { getArchivedShifts, getShifts } from "@/lib/store";
 import { getUsers, getWarnings } from "@/lib/users";
 import CreateShiftForm from "@/components/CreateShiftForm";
 import ShiftCard from "@/components/ShiftCard";
+import WeekSchedule from "@/components/WeekSchedule";
 import CreateAccountForm from "@/components/CreateAccountForm";
 import EditAccountForm from "@/components/EditAccountForm";
 import DeleteAccountButton from "@/components/DeleteAccountButton";
@@ -30,7 +31,8 @@ export default async function AdminPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page page-layout">
+      <div className="page-main">
       <div className="page-head">
         <h1>Admin panel</h1>
         <p className="muted">Welcome back, {session.username}. Create shifts or free days, review applicants and manage accounts.</p>
@@ -146,6 +148,8 @@ export default async function AdminPage() {
           </table>
         </div>
       </section>
+      </div>
+      <WeekSchedule shifts={sorted} />
     </div>
   );
 }

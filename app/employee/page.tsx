@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/session";
 import { getShifts } from "@/lib/store";
 import { getWarnings } from "@/lib/users";
 import ShiftCard, { formatDate } from "@/components/ShiftCard";
+import WeekSchedule from "@/components/WeekSchedule";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,8 @@ export default async function EmployeePage() {
   );
 
   return (
-    <div className="page">
+    <div className="page page-layout">
+      <div className="page-main">
       <div className="page-head">
         <h1>Available shifts</h1>
         <p className="muted">Find a shift that suits you and apply, or take a free day off.</p>
@@ -68,6 +70,8 @@ export default async function EmployeePage() {
           </div>
         )}
       </section>
+      </div>
+      <WeekSchedule shifts={sorted} />
     </div>
   );
 }
