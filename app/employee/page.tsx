@@ -1,5 +1,5 @@
 import { requireRole } from "@/lib/session";
-import { getArchivedShifts, getShifts } from "@/lib/store";
+import { getShifts } from "@/lib/store";
 import { getWarnings } from "@/lib/users";
 import ShiftCard, { formatDate } from "@/components/ShiftCard";
 
@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 export default async function EmployeePage() {
   const session = await requireRole(["employee"]);
   const shifts = await getShifts();
-  const archivedShifts = await getArchivedShifts();
   const warnings = await getWarnings();
   const myWarnings = warnings.filter((w) => w.username === session.username);
 
@@ -66,28 +65,6 @@ export default async function EmployeePage() {
                 />
               );
             })}
-          </div>
-        )}
-      </section>
-
-      <section className="shifts-section">
-        <h2>
-          Two-week archive <span className="count">({archivedShifts.length})</span>
-        </h2>
-        {archivedShifts.length === 0 ? (
-          <div className="card">
-            <p className="muted">Past shifts and free days remain here for 14 days.</p>
-          </div>
-        ) : (
-          <div className="grid">
-            {archivedShifts.map((shift) => (
-              <ShiftCard
-                key={shift.id}
-                view="employee"
-                shift={shift}
-                archived
-              />
-            ))}
           </div>
         )}
       </section>

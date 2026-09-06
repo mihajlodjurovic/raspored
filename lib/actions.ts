@@ -197,9 +197,12 @@ export async function withdrawApplication(
   }));
 
   // Red-point rule: cancelling within 48h of the shift start earns a warning.
+  // Free days have no start time, so they never earn a red point.
   const shiftStart = new Date(`${shift.date}T${shift.startTime}`).getTime();
   const within48h =
-    Number.isFinite(shiftStart) && shiftStart - Date.now() < FORTY_EIGHT_HOURS_MS;
+    shift.type === "shift" &&
+    Number.isFinite(shiftStart) &&
+    shiftStart - Date.now() < FORTY_EIGHT_HOURS_MS;
 
   if (within48h) {
     await addWarning({
