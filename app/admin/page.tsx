@@ -51,7 +51,7 @@ export default async function AdminPage() {
         ) : (
           <div className="grid">
             {sorted.map((shift) => (
-              <ShiftCard key={shift.id} view="admin" shift={shift} />
+              <ShiftCard key={shift.id} view="admin" shift={shift} users={users} />
             ))}
           </div>
         )}
@@ -68,7 +68,7 @@ export default async function AdminPage() {
         ) : (
           <div className="grid">
             {archivedShifts.map((shift) => (
-              <ShiftCard key={shift.id} view="admin" shift={shift} archived />
+              <ShiftCard key={shift.id} view="admin" shift={shift} archived users={users} />
             ))}
           </div>
         )}

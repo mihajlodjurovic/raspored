@@ -104,7 +104,9 @@ export async function createShift(formData: FormData): Promise<ActionResult> {
   }
   if (type === "shift") {
     if (!startTime || !endTime) return { ok: false, error: "Please pick the start and end times." };
-    if (startTime >= endTime) return { ok: false, error: "End time must be after the start time." };
+    // Overnight shifts are allowed (e.g. 16:00–00:00, 19:00–01:00), so the
+    // end time only has to be different from the start time.
+    if (startTime === endTime) return { ok: false, error: "End time must be different from the start time." };
   }
   if (!Number.isFinite(needed) || needed < 1) {
     return {
@@ -139,6 +141,62 @@ export async function removeShift(shiftId: string): Promise<ActionResult> {
   await deleteShift(shiftId);
   revalidatePath("/admin");
   return { ok: true };
+}
+
+export async function addWorkerToShift(
+  shiftId: string,
+  username: string
+): Promise<ActionResult> {
+  await requireRole(["admin"]);
+
+  const shift = await getShift(shiftId);
+  if (!shift) return { ok: false, error: "This schedule entry no longer exists." };
+
+  const user = await getUserByUsername(username);
+  if (!user) return { ok: false, error: "No account with that username." };
+  if (shift.applicants.some((a) => a.username === user.username)) {
+    return { ok: false, error: "That worker is already on this entry." };
+  }
+
+  const applicant: Applicant = {
+    id: newId(),
+    username: user.username,
+    name: user.name,
+    surname: user.surname,
+    phone: user.phone,
+    appliedAt: new Date().toISOString(),
+  };
+
+  await updateShift(shiftId, (s) => ({
+    ...s,
+    applicants: [...s.applicants, applicant],
+  }));
+
+  revalidatePath("/admin");
+  revalidatePath("/employee");
+  return { ok: true, message: "Worker added." };
+}
+
+export async function removeWorkerFromShift(
+  shiftId: string,
+  applicantId: string
+): Promise<ActionResult> {
+  await requireRole(["admin"]);
+
+  const shift = await getShift(shiftId);
+  if (!shift) return { ok: false, error: "This schedule entry no longer exists." };
+  if (!shift.applicants.some((a) => a.id === applicantId)) {
+    return { ok: false, error: "Applicant not found." };
+  }
+
+  await updateShift(shiftId, (s) => ({
+    ...s,
+    applicants: s.applicants.filter((a) => a.id !== applicantId),
+  }));
+
+  revalidatePath("/admin");
+  revalidatePath("/employee");
+  return { ok: true, message: "Worker removed." };
 }
 
 /* ----------------------------- Applications ----------------------------- */

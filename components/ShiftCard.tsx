@@ -1,6 +1,8 @@
-import type { Applicant, Shift } from "@/lib/types";
+import type { Applicant, Shift, User } from "@/lib/types";
 import ApplyForm from "./ApplyForm";
+import AddWorkerForm from "./AddWorkerForm";
 import DeleteShiftButton from "./DeleteShiftButton";
+import RemoveApplicantButton from "./RemoveApplicantButton";
 import WithdrawButton from "./WithdrawButton";
 
 export function formatDate(date: string): string {
@@ -19,7 +21,7 @@ export function formatTime(t: string): string {
 }
 
 type Props =
-  | { view: "admin"; shift: Shift; archived?: boolean }
+  | { view: "admin"; shift: Shift; archived?: boolean; users?: User[] }
   | {
       view: "employee";
       shift: Shift;
@@ -37,6 +39,19 @@ export default function ShiftCard(props: Props) {
   const archived = props.archived === true;
   const spotsLeft = Math.max(0, shift.needed - shift.applicants.length);
   const isFull = shift.applicants.length >= shift.needed;
+  const availableEmployees =
+    props.view === "admin" && props.users
+      ? props.users
+          .filter(
+            (u) =>
+              u.role === "employee" &&
+              !shift.applicants.some((a) => a.username === u.username)
+          )
+          .map((u) => ({
+            username: u.username,
+            label: `${u.name} ${u.surname} (${u.username})`,
+          }))
+      : [];
 
   return (
     <article className={`card shift-card ${isFull ? "is-full" : ""} ${isFreeDay ? "is-free-day" : ""} ${archived ? "is-archived" : ""}`}>
@@ -73,10 +88,21 @@ export default function ShiftCard(props: Props) {
               {shift.applicants.map((a) => (
                 <li key={a.id} className="applicant">
                   <span>{fullName(a)}</span>
-                  <span className="applicant-phone">{a.phone}</span>
+                  <span className="applicant-meta">
+                    <span className="applicant-phone">{a.phone}</span>
+                    {!archived && (
+                      <RemoveApplicantButton
+                        shiftId={shift.id}
+                        applicantId={a.id}
+                      />
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>
+          )}
+          {!archived && availableEmployees.length > 0 && (
+            <AddWorkerForm shiftId={shift.id} employees={availableEmployees} />
           )}
           {!archived && (
             <div className="card-actions">

@@ -1,28 +1,36 @@
 import type { Shift } from "@/lib/types";
 
 type Day = { iso: string; label: string; isToday: boolean };
+type Week = { label: string; days: Day[] };
 
-// Monday → Sunday of the current week, using UTC dates to match the rest of
-// the app (shift dates are plain YYYY-MM-DD strings).
-function weekDays(): Day[] {
+// Current and next week (Monday → Sunday), using UTC dates to match the rest
+// of the app (shift dates are plain YYYY-MM-DD strings).
+function weeks(): Week[] {
   const now = new Date();
   const todayIso = now.toISOString().slice(0, 10);
   const mondayOffset = (now.getUTCDay() + 6) % 7; // days since Monday
   const monday = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - mondayOffset)
   );
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setUTCDate(monday.getUTCDate() + i);
-    const iso = d.toISOString().slice(0, 10);
+  return [0, 7].map((weekOffset, weekIndex) => {
+    const weekStart = new Date(monday);
+    weekStart.setUTCDate(monday.getUTCDate() + weekOffset);
     return {
-      iso,
-      label: d.toLocaleDateString("en-GB", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
+      label: weekIndex === 0 ? "This week" : "Next week",
+      days: Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(weekStart);
+        d.setUTCDate(weekStart.getUTCDate() + i);
+        const iso = d.toISOString().slice(0, 10);
+        return {
+          iso,
+          label: d.toLocaleDateString("en-GB", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+          }),
+          isToday: iso === todayIso,
+        };
       }),
-      isToday: iso === todayIso,
     };
   });
 }
@@ -31,14 +39,12 @@ function workerNames(shift: Shift): string {
   return shift.applicants.map((a) => `${a.name} ${a.surname}`).join(", ");
 }
 
-export default function WeekSchedule({ shifts }: { shifts: Shift[] }) {
-  const days = weekDays();
-
+function WeekList({ week, shifts }: { week: Week; shifts: Shift[] }) {
   return (
-    <aside className="card week-schedule">
-      <h2>This week</h2>
+    <div className="week-group">
+      <h3 className="week-heading">{week.label}</h3>
       <div className="week-days">
-        {days.map((day) => {
+        {week.days.map((day) => {
           const entries = shifts.filter((s) => s.date === day.iso);
           return (
             <div key={day.iso} className={`week-day ${day.isToday ? "is-today" : ""}`}>
@@ -84,6 +90,19 @@ export default function WeekSchedule({ shifts }: { shifts: Shift[] }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+export default function WeekSchedule({ shifts }: { shifts: Shift[] }) {
+  const allWeeks = weeks();
+
+  return (
+    <aside className="card week-schedule">
+      <h2>Schedule</h2>
+      {allWeeks.map((week) => (
+        <WeekList key={week.label} week={week} shifts={shifts} />
+      ))}
     </aside>
   );
 }
