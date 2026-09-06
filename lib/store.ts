@@ -1,7 +1,7 @@
 import "server-only";
 
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
-import type { Applicant, Shift } from "./types";
+import type { Applicant, ScheduleEntryType, Shift } from "./types";
 
 // Postgres (Neon) storage. Works on Vercel serverless functions.
 // Requires the DATABASE_URL env var (Neon connection string).
@@ -12,6 +12,7 @@ type QueryFn = NeonQueryFunction<false, false>;
 
 type ShiftRow = {
   id: string;
+  type: ScheduleEntryType | null;
   date: string;
   start_time: string;
   end_time: string;
@@ -34,13 +35,16 @@ function toApplicants(raw: unknown): Applicant[] {
 function rowToShift(row: ShiftRow): Shift {
   return {
     id: row.id,
+    type: row.type === "freeDay" ? "freeDay" : "shift",
     date: row.date,
     startTime: row.start_time,
     endTime: row.end_time,
     needed: row.needed,
     applicants: toApplicants(row.applicants),
   };
-}function db(): QueryFn {
+}
+
+function db(): QueryFn {
   if (!sql) {
     throw new Error(
       "DATABASE_URL is not set. Add your Neon connection string to .env.local (or to Vercel project env vars)."
@@ -55,31 +59,85 @@ function ensureSchema(): Promise<void> {
     schemaReady = db()
       `CREATE TABLE IF NOT EXISTS shifts (
         id         TEXT PRIMARY KEY,
+        type       TEXT NOT NULL DEFAULT 'shift',
         date       TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time   TEXT NOT NULL,
         needed     INTEGER NOT NULL,
         applicants JSONB NOT NULL DEFAULT '[]'::jsonb
       )`
-      .then(() => undefined);
+      .then(async () => {
+        // These ALTER statements keep existing installations compatible.
+        await db() `ALTER TABLE shifts ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'shift'`;
+        await db() `
+          CREATE TABLE IF NOT EXISTS archived_shifts (
+            id         TEXT PRIMARY KEY,
+            type       TEXT NOT NULL DEFAULT 'shift',
+            date       TEXT NOT NULL,
+            start_time TEXT NOT NULL,
+            end_time   TEXT NOT NULL,
+            needed     INTEGER NOT NULL,
+            applicants JSONB NOT NULL DEFAULT '[]'::jsonb,
+            archived_at TEXT NOT NULL
+          )
+        `;
+        await db() `ALTER TABLE archived_shifts ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'shift'`;
+      });
   }
   return schemaReady;
 }
 
-export async function getShifts(): Promise<Shift[]> {
+const ARCHIVE_RETENTION_DAYS = 14;
+
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function archiveCutoffTimestamp(): string {
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - ARCHIVE_RETENTION_DAYS);
+  return cutoff.toISOString();
+}
+
+async function maintainArchive(): Promise<void> {
   await ensureSchema();
-  const rows = (await db()`
-    SELECT id, date, start_time, end_time, needed, applicants
+
+  // Remove archived entries after 14 days, then move all past entries once.
+  await db() `DELETE FROM archived_shifts WHERE archived_at < ${archiveCutoffTimestamp()}`;
+  await db() `
+    INSERT INTO archived_shifts (id, type, date, start_time, end_time, needed, applicants, archived_at)
+    SELECT id, type, date, start_time, end_time, needed, applicants, ${new Date().toISOString()}
+    FROM shifts
+    WHERE date < ${todayUtc()}
+    ON CONFLICT (id) DO NOTHING
+  `;
+  await db() `DELETE FROM shifts WHERE date < ${todayUtc()}`;
+}
+
+export async function getShifts(): Promise<Shift[]> {
+  await maintainArchive();
+  const rows = (await db() `
+    SELECT id, type, date, start_time, end_time, needed, applicants
     FROM shifts
     ORDER BY date, start_time
   `) as unknown as ShiftRow[];
   return rows.map(rowToShift);
 }
 
+export async function getArchivedShifts(): Promise<Shift[]> {
+  await maintainArchive();
+  const rows = (await db() `
+    SELECT id, type, date, start_time, end_time, needed, applicants
+    FROM archived_shifts
+    ORDER BY date DESC, start_time DESC
+  `) as unknown as ShiftRow[];
+  return rows.map(rowToShift);
+}
+
 export async function getShift(id: string): Promise<Shift | undefined> {
-  await ensureSchema();
-  const rows = (await db()`
-    SELECT id, date, start_time, end_time, needed, applicants
+  await maintainArchive();
+  const rows = (await db() `
+    SELECT id, type, date, start_time, end_time, needed, applicants
     FROM shifts
     WHERE id = ${id}
   `) as unknown as ShiftRow[];
@@ -88,9 +146,9 @@ export async function getShift(id: string): Promise<Shift | undefined> {
 
 export async function addShift(shift: Shift): Promise<void> {
   await ensureSchema();
-  await db()`
-    INSERT INTO shifts (id, date, start_time, end_time, needed, applicants)
-    VALUES (${shift.id}, ${shift.date}, ${shift.startTime}, ${shift.endTime}, ${shift.needed}, ${JSON.stringify(
+  await db() `
+    INSERT INTO shifts (id, type, date, start_time, end_time, needed, applicants)
+    VALUES (${shift.id}, ${shift.type}, ${shift.date}, ${shift.startTime}, ${shift.endTime}, ${shift.needed}, ${JSON.stringify(
       shift.applicants
     )}::jsonb)
   `;
@@ -104,9 +162,10 @@ export async function updateShift(
   const existing = await getShift(id);
   if (!existing) return;
   const next = update({ ...existing });
-  await db()`
+  await db() `
     UPDATE shifts
-    SET date = ${next.date},
+    SET type = ${next.type},
+        date = ${next.date},
         start_time = ${next.startTime},
         end_time = ${next.endTime},
         needed = ${next.needed},
@@ -117,5 +176,6 @@ export async function updateShift(
 
 export async function deleteShift(id: string): Promise<void> {
   await ensureSchema();
-  await db()`DELETE FROM shifts WHERE id = ${id}`;
+  await db() `DELETE FROM shifts WHERE id = ${id}`;
+  await db() `DELETE FROM archived_shifts WHERE id = ${id}`;
 }

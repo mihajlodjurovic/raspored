@@ -2,7 +2,7 @@
 
 A small work-scheduling app with two roles:
 
-- **Admin** (`VUKAS`) — creates shift cards (date, start → end time, number of workers needed) and sees who applied to each shift.
+- **Admin** (`VUKAS`) — creates working shifts or free-day cards (date and time), sees who applied to each shift, and reviews the two-week archive.
 - **Employee** — sees all shift cards and applies to the ones that still have free spots (name, surname, phone). A shift only accepts as many applicants as the admin requested.
 
 Built with Next.js 16 (App Router) + TypeScript, using **Neon Postgres** for storage.
@@ -34,19 +34,32 @@ Use `npm run start -- -p 3001` to pick a different port.
 
 ## Data & storage
 
-- Shifts and applications are stored in **Postgres** (Neon). The table (`shifts`) is created automatically on first use.
-- Everything is isolated in `lib/store.ts` — a thin layer with `getShifts`, `getShift`, `addShift`, `updateShift`, `deleteShift`.
+- Shifts, free days, applications, and the two-week archive are stored in **Postgres** (Neon). The `shifts` and `archived_shifts` tables are created automatically on first use.
+- Past entries move to `archived_shifts` the next time the schedule is read. Entries older than 14 days are permanently deleted. Archived entries are read-only and no longer accept applications.
+- Everything is isolated in `lib/store.ts` — a thin layer with schedule and archive read/write helpers.
 - Sessions are stateless JWT cookies signed with `AUTH_SECRET` (optional; falls back to a dev secret). Set `AUTH_SECRET` in your env for production.
 - The table schema:
 
 ```sql
 CREATE TABLE IF NOT EXISTS shifts (
   id         TEXT PRIMARY KEY,
+  type       TEXT NOT NULL DEFAULT 'shift', -- 'shift' or 'freeDay'
   date       TEXT NOT NULL,
   start_time TEXT NOT NULL,
   end_time   TEXT NOT NULL,
-  needed     INTEGER NOT NULL,
+  needed     INTEGER NOT NULL,              -- 0 for free days
   applicants JSONB NOT NULL DEFAULT '[]'::jsonb
+);
+
+CREATE TABLE IF NOT EXISTS archived_shifts (
+  id          TEXT PRIMARY KEY,
+  type        TEXT NOT NULL DEFAULT 'shift',
+  date        TEXT NOT NULL,
+  start_time  TEXT NOT NULL,
+  end_time    TEXT NOT NULL,
+  needed      INTEGER NOT NULL,
+  applicants  JSONB NOT NULL DEFAULT '[]'::jsonb,
+  archived_at TEXT NOT NULL
 );
 ```
 

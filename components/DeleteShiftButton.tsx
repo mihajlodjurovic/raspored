@@ -2,7 +2,13 @@
 
 import { removeShift } from "@/lib/actions";
 
-export default function DeleteShiftButton({ shiftId }: { shiftId: string }) {
+export default function DeleteShiftButton({
+  shiftId,
+  label = "Delete shift",
+}: {
+  shiftId: string;
+  label?: string;
+}) {
   const action = async () => {
     await removeShift(shiftId);
   };
@@ -11,13 +17,13 @@ export default function DeleteShiftButton({ shiftId }: { shiftId: string }) {
     <form
       action={action}
       onSubmit={(e) => {
-        if (!confirm("Delete this shift? This cannot be undone.")) {
+        if (!confirm(`Delete this schedule entry? This cannot be undone.`)) {
           e.preventDefault();
         }
       }}
     >
       <button type="submit" className="btn btn-danger">
-        Delete
+        {label}
       </button>
     </form>
   );

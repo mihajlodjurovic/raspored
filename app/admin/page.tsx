@@ -1,5 +1,5 @@
 import { requireRole } from "@/lib/session";
-import { getShifts } from "@/lib/store";
+import { getArchivedShifts, getShifts } from "@/lib/store";
 import { getUsers, getWarnings } from "@/lib/users";
 import CreateShiftForm from "@/components/CreateShiftForm";
 import ShiftCard from "@/components/ShiftCard";
@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const session = await requireRole(["admin"]);
   const shifts = await getShifts();
+  const archivedShifts = await getArchivedShifts();
   const users = await getUsers();
   const warnings = await getWarnings();
 
@@ -32,23 +33,40 @@ export default async function AdminPage() {
     <div className="page">
       <div className="page-head">
         <h1>Admin panel</h1>
-        <p className="muted">Welcome back, {session.username}. Create shifts, review applicants and manage accounts.</p>
+        <p className="muted">Welcome back, {session.username}. Create shifts or free days, review applicants and manage accounts.</p>
       </div>
 
       <CreateShiftForm />
 
       <section className="shifts-section">
         <h2>
-          Shifts <span className="count">({sorted.length})</span>
+          Schedule <span className="count">({sorted.length})</span>
         </h2>
         {sorted.length === 0 ? (
           <div className="card">
-            <p className="muted">No shifts yet. Create your first one above.</p>
+            <p className="muted">No upcoming schedule entries yet. Create your first one above.</p>
           </div>
         ) : (
           <div className="grid">
             {sorted.map((shift) => (
               <ShiftCard key={shift.id} view="admin" shift={shift} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="shifts-section">
+        <h2>
+          Two-week archive <span className="count">({archivedShifts.length})</span>
+        </h2>
+        {archivedShifts.length === 0 ? (
+          <div className="card">
+            <p className="muted">Past shifts and free days will remain here for 14 days.</p>
+          </div>
+        ) : (
+          <div className="grid">
+            {archivedShifts.map((shift) => (
+              <ShiftCard key={shift.id} view="admin" shift={shift} archived />
             ))}
           </div>
         )}

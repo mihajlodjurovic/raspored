@@ -179,6 +179,20 @@ a {
   background: #fee2e2;
   color: var(--danger);
 }
+.badge-free {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.badge-archived {
+  background: #f1f5f9;
+  color: #475569;
+}
+.is-free-day {
+  border-color: #bae6fd;
+}
+.is-archived {
+  opacity: 0.8;
+}
 .is-full {
   border-color: #fecaca;
 }
@@ -238,6 +252,18 @@ a {
 .field > span {
   font-size: 0.85rem;
   font-weight: 600;
+}
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.checkbox-field input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
 }
 .field input,
 .field select {

@@ -9,12 +9,15 @@ export type Applicant = {
   appliedAt: string;
 };
 
+export type ScheduleEntryType = "shift" | "freeDay";
+
 export type Shift = {
   id: string;
+  type: ScheduleEntryType;
   date: string; // YYYY-MM-DD
   startTime: string; // HH:MM
   endTime: string; // HH:MM
-  needed: number; // how many workers are needed
+  needed: number; // how many workers are needed; 0 for free days
   applicants: Applicant[];
 };
 

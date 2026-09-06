@@ -1,5 +1,5 @@
 import { requireRole } from "@/lib/session";
-import { getShifts } from "@/lib/store";
+import { getArchivedShifts, getShifts } from "@/lib/store";
 import { getWarnings } from "@/lib/users";
 import ShiftCard, { formatDate } from "@/components/ShiftCard";
 
@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function EmployeePage() {
   const session = await requireRole(["employee"]);
   const shifts = await getShifts();
+  const archivedShifts = await getArchivedShifts();
   const warnings = await getWarnings();
   const myWarnings = warnings.filter((w) => w.username === session.username);
 
@@ -19,7 +20,7 @@ export default async function EmployeePage() {
     <div className="page">
       <div className="page-head">
         <h1>Available shifts</h1>
-        <p className="muted">Find a shift that suits you and apply.</p>
+        <p className="muted">Find a shift that suits you and apply. Free days are marked clearly and cannot be applied for.</p>
       </div>
 
       {myWarnings.length > 0 && (
@@ -42,27 +43,54 @@ export default async function EmployeePage() {
         </div>
       )}
 
-      {sorted.length === 0 ? (
-        <div className="card">
-          <p className="muted">No shifts have been posted yet. Check back later.</p>
-        </div>
-      ) : (
-        <div className="grid">
-          {sorted.map((shift) => {
-            const myApp = shift.applicants.find(
-              (a) => a.username === session.username
-            );
-            return (
+      <section className="shifts-section">
+        <h2>
+          Upcoming schedule <span className="count">({sorted.length})</span>
+        </h2>
+        {sorted.length === 0 ? (
+          <div className="card">
+            <p className="muted">No shifts have been posted yet. Check back later.</p>
+          </div>
+        ) : (
+          <div className="grid">
+            {sorted.map((shift) => {
+              const myApp = shift.applicants.find(
+                (a) => a.username === session.username
+              );
+              return (
+                <ShiftCard
+                  key={shift.id}
+                  view="employee"
+                  shift={shift}
+                  myApplication={myApp}
+                />
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="shifts-section">
+        <h2>
+          Two-week archive <span className="count">({archivedShifts.length})</span>
+        </h2>
+        {archivedShifts.length === 0 ? (
+          <div className="card">
+            <p className="muted">Past shifts and free days remain here for 14 days.</p>
+          </div>
+        ) : (
+          <div className="grid">
+            {archivedShifts.map((shift) => (
               <ShiftCard
                 key={shift.id}
                 view="employee"
                 shift={shift}
-                myApplication={myApp}
+                archived
               />
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -19,29 +19,27 @@ export function formatTime(t: string): string {
 }
 
 type Props =
-  | { view: "admin"; shift: Shift }
+  | { view: "admin"; shift: Shift; archived?: boolean }
   | {
       view: "employee";
       shift: Shift;
       myApplication?: Applicant; // this viewer's own application, if any
+      archived?: boolean;
     };
 
 function fullName(a: { name: string; surname: string }): string {
   return `${a.name} ${a.surname}`;
 }
 
-const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
-
 export default function ShiftCard(props: Props) {
   const { shift } = props;
+  const isFreeDay = shift.type === "freeDay";
+  const archived = props.archived === true;
   const spotsLeft = Math.max(0, shift.needed - shift.applicants.length);
   const isFull = shift.applicants.length >= shift.needed;
-  const shiftStartMs = new Date(`${shift.date}T${shift.startTime}`).getTime();
-  const within48h =
-    Number.isFinite(shiftStartMs) && shiftStartMs - Date.now() < FORTY_EIGHT_HOURS_MS;
 
   return (
-    <article className={`card shift-card ${isFull ? "is-full" : ""}`}>
+    <article className={`card shift-card ${isFull && !isFreeDay ? "is-full" : ""} ${isFreeDay ? "is-free-day" : ""} ${archived ? "is-archived" : ""}`}>
       <div className="shift-head">
         <div>
           <h3 className="shift-date">{formatDate(shift.date)}</h3>
@@ -49,42 +47,47 @@ export default function ShiftCard(props: Props) {
             {shift.startTime} – {shift.endTime}
           </p>
         </div>
-        <span className={`badge ${isFull ? "badge-full" : "badge-open"}`}>
-          {isFull ? "Full" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
+        <span className={`badge ${isFreeDay ? "badge-free" : archived ? "badge-archived" : isFull ? "badge-full" : "badge-open"}`}>
+          {isFreeDay ? "Free day" : archived ? "Archived" : isFull ? "Full" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
         </span>
       </div>
 
-      <p className="shift-needed">
-        Needed: <strong>{shift.needed}</strong> worker{shift.needed === 1 ? "" : "s"}
-      </p>
+      {isFreeDay ? (
+        <p className="shift-needed">No work scheduled during this time.</p>
+      ) : (
+        <p className="shift-needed">
+          Needed: <strong>{shift.needed}</strong> worker{shift.needed === 1 ? "" : "s"}
+        </p>
+      )}
 
       {props.view === "admin" ? (
         <>
           {shift.applicants.length === 0 ? (
-            <p className="muted">No applicants yet.</p>
+            <p className="muted">{isFreeDay ? "No applications for a free day." : "No applicants yet."}</p>
           ) : (
             <ul className="applicants">
               {shift.applicants.map((a) => (
                 <li key={a.id} className="applicant">
-                  <span>
-                    {a.name} {a.surname}
-                  </span>
+                  <span>{fullName(a)}</span>
                   <span className="applicant-phone">{a.phone}</span>
                 </li>
               ))}
             </ul>
           )}
-          <div className="card-actions">
-            <DeleteShiftButton shiftId={shift.id} />
-          </div>
+          {!archived && (
+            <div className="card-actions">
+              <DeleteShiftButton shiftId={shift.id} label={isFreeDay ? "Delete free day" : "Delete shift"} />
+            </div>
+          )}
         </>
       ) : (
         <div className="card-actions">
-          {props.myApplication ? (
+          {archived || isFreeDay ? (
+            <span className="muted">{archived ? "Applications are closed." : "This day is reserved as a free day."}</span>
+          ) : props.myApplication ? (
             <WithdrawButton
               shiftId={shift.id}
               applicantId={props.myApplication.id}
-              within48h={within48h}
             />
           ) : isFull ? (
             <span className="muted">This shift is full.</span>

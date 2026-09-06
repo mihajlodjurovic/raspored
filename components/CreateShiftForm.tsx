@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createShift } from "@/lib/actions";
 import type { ActionResult } from "@/lib/actions";
 
@@ -13,10 +13,15 @@ for (let h = 0; h < 24; h++) {
 }
 
 export default function CreateShiftForm() {
+  const [isFreeDay, setIsFreeDay] = useState(false);
   const createAction = async (
     _prev: ActionResult | undefined,
     formData: FormData
-  ) => createShift(formData);
+  ) => {
+    const result = await createShift(formData);
+    if (result.ok) setIsFreeDay(false);
+    return result;
+  };
 
   const [state, formAction, pending] = useActionState(createAction, undefined);
   const formRef = useRef<HTMLFormElement>(null);
@@ -29,7 +34,7 @@ export default function CreateShiftForm() {
 
   return (
     <form ref={formRef} action={formAction} className="card form">
-      <h2>Create a new shift</h2>
+      <h2>Create a new schedule entry</h2>
 
       <label className="field">
         <span>Date</span>
@@ -59,17 +64,30 @@ export default function CreateShiftForm() {
         </label>
       </div>
 
-      <label className="field">
-        <span>Number of workers needed</span>
-        <input type="number" name="needed" min={1} defaultValue={1} required />
+      <label className="checkbox-field">
+        <input
+          type="checkbox"
+          name="type"
+          value="freeDay"
+          checked={isFreeDay}
+          onChange={(event) => setIsFreeDay(event.target.checked)}
+        />
+        <span>This is a free day (no workers needed)</span>
       </label>
 
+      {!isFreeDay && (
+        <label className="field">
+          <span>Number of workers needed</span>
+          <input type="number" name="needed" min={1} defaultValue={1} required />
+        </label>
+      )}
+
       <button type="submit" className="btn btn-primary" disabled={pending}>
-        {pending ? "Creating…" : "Create shift"}
+        {pending ? "Creating…" : isFreeDay ? "Create free day" : "Create shift"}
       </button>
 
       {!state?.ok && state?.error && <p className="error">{state.error}</p>}
-      {state?.ok && <p className="success">Shift created!</p>}
+      {state?.ok && <p className="success">{state.message}</p>}
     </form>
   );
 }
